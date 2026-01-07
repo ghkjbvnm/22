@@ -77,15 +77,21 @@ class SeleniumManager:
         self.driver = webdriver.Chrome(options=chrome_options)
         self.contexts["default"] = self.driver
 
-    def connect_to_browser(self, debugger_port):
+    def connect_to_browser(self, debugger_port, webdriver_path=None):
         """
         连接到已有的浏览器实例（通过远程调试端口）
         Args:
             debugger_port: 远程调试端口
+            webdriver_path: chromedriver的路径（可选）
         """
         chrome_options = Options()
         chrome_options.add_experimental_option("debuggerAddress", f"localhost:{debugger_port}")
-        self.driver = webdriver.Chrome(options=chrome_options)
+
+        if webdriver_path:
+            service = Service(executable_path=webdriver_path)
+            self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        else:
+            self.driver = webdriver.Chrome(options=chrome_options)
         self.contexts["default"] = self.driver
 
     def close_browser(self):
@@ -128,15 +134,19 @@ def main():
         print("启动浏览器失败")
         return
 
-    # 获取调试端口
+    # 获取调试端口和webdriver路径
     debugging_port = response_data.get("data", {}).get("debuggingPort")
+    webdriver_path = response_data.get("data", {}).get("webdriver_path")
     if not debugging_port:
         print("未找到调试端口")
         return
 
+    print(f"准备连接浏览器 - 端口: {debugging_port}, 驱动路径: {webdriver_path}")
+
     # 使用Selenium连接到浏览器
     try:
-        manager.connect_to_browser(debugging_port)
+        manager.connect_to_browser(debugging_port, webdriver_path)
+        print("成功连接到浏览器")
 
         # 获取driver实例
         driver = manager.driver
