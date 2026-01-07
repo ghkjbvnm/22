@@ -10,28 +10,14 @@ import requests
 
 
 class SeleniumManager:
-    """
-    Selenium管理器类
-    用于管理浏览器驱动和页面实例的创建与管理
-    """
+    """Selenium管理器类 - 支持绕过Cloudflare检测"""
+
     def __init__(self):
-        """
-        初始化SeleniumManager
-        contexts: 存储浏览器窗口/标签的字典
-        pages: 存储页面实例的嵌套字典
-        """
         self.driver = None
         self.contexts = {}
         self.pages = {}
 
     def get_context(self, context_id):
-        """
-        获取或创建浏览器窗口
-        Args:
-            context_id: 上下文标识符
-        Returns:
-            webdriver实例
-        """
         if context_id in self.contexts:
             return self.contexts[context_id]
         else:
@@ -39,23 +25,13 @@ class SeleniumManager:
             return self.contexts[context_id]
 
     def get_page(self, context_id, page_id):
-        """
-        获取或创建页面实例（新标签页）
-        Args:
-            context_id: 上下文标识符
-            page_id: 页面标识符
-        Returns:
-            webdriver实例
-        """
         driver = self.get_context(context_id)
         if context_id not in self.pages:
             self.pages[context_id] = {}
         if page_id in self.pages[context_id]:
-            # 切换到已存在的窗口/标签页
-            self.pages[context_id][page_id].switch_to.window(self.pages[context_id][page_id].current_window_handle)
+            driver.switch_to.window(driver.current_window_handle)
             return self.pages[context_id][page_id]
         else:
-            # 创建新的标签页
             driver.execute_script("window.open('');")
             driver.switch_to.window(driver.window_handles[-1])
             self.pages[context_id][page_id] = driver
@@ -74,38 +50,40 @@ class SeleniumManager:
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-gpu')
 
+        # 添加反检测参数（移除不支持的选项）
+        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+
         self.driver = webdriver.Chrome(options=chrome_options)
         self.contexts["default"] = self.driver
 
     def connect_to_browser(self, debugger_port, webdriver_path=None):
         """
-        连接到已有的浏览器实例（通过远程调试端口）
+        连接到已有的浏览器实例
         Args:
             debugger_port: 远程调试端口
-            webdriver_path: chromedriver的路径（可选）
+            webdriver_path: chromedriver路径
         """
         chrome_options = Options()
         chrome_options.add_experimental_option("debuggerAddress", f"localhost:{debugger_port}")
+
+        # 移除不支持的选项，只保留基本的反检测参数
+        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
 
         if webdriver_path:
             service = Service(executable_path=webdriver_path)
             self.driver = webdriver.Chrome(service=service, options=chrome_options)
         else:
             self.driver = webdriver.Chrome(options=chrome_options)
+
         self.contexts["default"] = self.driver
 
     def close_browser(self):
-        """关闭浏览器实例"""
         if self.driver:
             self.driver.quit()
 
 
 def main():
-    """
-    主函数：演示如何使用SeleniumManager进行浏览器自动化
-    包含API调用启动浏览器、连接CDP、页面操作等功能
-    """
-    # 初始化管理器
+    """主函数：演示如何绕过Cloudflare检测"""
     manager = SeleniumManager()
 
     # API配置
@@ -129,58 +107,82 @@ def main():
         print(f"启动浏览器失败: {err}")
         return
 
-    # 检查启动是否成功
     if not response_data.get("success"):
         print("启动浏览器失败")
         return
 
-    # 获取调试端口和webdriver路径
     debugging_port = response_data.get("data", {}).get("debuggingPort")
     webdriver_path = response_data.get("data", {}).get("webdriver_path")
-    if not debugging_port:
-        print("未找到调试端口")
-        return
 
     print(f"准备连接浏览器 - 端口: {debugging_port}, 驱动路径: {webdriver_path}")
 
-    # 使用Selenium连接到浏览器
     try:
         manager.connect_to_browser(debugging_port, webdriver_path)
         print("成功连接到浏览器")
 
-        # 获取driver实例
         driver = manager.driver
 
-        # 管理浏览器上下文和页面
+        # 添加更多反检测配置（可选）
+        driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+            'source': '''
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                });
+                Object.defineProperty(navigator, 'plugins', {
+                    get: () => [1, 2, 3, 4, 5]
+                });
+                Object.defineProperty(navigator, 'languages', {
+                    get: () => ['zh-CN', 'zh', 'en']
+                });
+            '''
+        })
+
         if len(driver.window_handles) > 0:
-            # 使用已存在的窗口
             driver.switch_to.window(driver.window_handles[0])
             manager.contexts["default"] = driver
             if "default" not in manager.pages:
                 manager.pages["default"] = {}
             manager.pages["default"]["main"] = driver
-        else:
-            # 创建新的上下文和页面
-            manager.launch_browser()
-            driver = manager.get_context("default")
-            driver = manager.get_page("default", "main")
 
-        # 演示：访问百度首页
-        driver.get("https://www.baidu.com")
+        # 访问目标网站（可能有Cloudflare保护）
+        print("正在访问网站...")
+        driver.get("https://www.overchargedforbeef.com/en/Claim")
 
-        # 等待页面加载完成
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "kw"))
-        )
-        print("页面加载成功")
+        # # 等待页面加载完成，增加等待时间应对Cloudflare验证
+        # try:
+        #     WebDriverWait(driver, 50).until(
+        #         EC.presence_of_element_located((By.ID, "kw"))
+        #     )
+        #     print("页面加载成功！")
+        # except:
+        #     print("等待超时，但页面可能已加载")
 
-        # 在这里可以添加更多的自动化测试代码
-        # 例如：页面交互、数据抓取等
+        # 等待额外的Cloudflare验证时间
+        time.sleep(30)
 
-        time.sleep(2)  # 演示延迟
+        # 检查是否有Cloudflare验证页面
+        try:
+            cf_challenge = driver.find_elements(By.CSS_SELECTOR, "#challenge-form, .cf-challenge-running")
+            if cf_challenge:
+                print("检测到Cloudflare验证，等待验证完成...")
+                # 等待Cloudflare验证完成（最多60秒）
+                for i in range(60):
+                    time.sleep(1)
+                    cf_challenge = driver.find_elements(By.CSS_SELECTOR, "#challenge-form, .cf-challenge-running")
+                    if not cf_challenge:
+                        print("Cloudflare验证通过！")
+                        break
+                    if i % 10 == 0:
+                        print(f"等待Cloudflare验证... ({i+1}s)")
+        except Exception as e:
+            print(f"检查Cloudflare验证时出错: {e}")
+
+        time.sleep(2)
 
     except Exception as err:
         print(f"Selenium操作出错: {err}")
+        import traceback
+        traceback.print_exc()
     finally:
         # 通过API关闭浏览器
         try:
@@ -191,15 +193,11 @@ def main():
             )
             stop_response_data = stop_response.json()
             print("关闭浏览器响应:", stop_response_data)
-            if not stop_response_data.get("success"):
-                print("通过API关闭浏览器失败")
         except Exception as err:
             print(f"关闭浏览器时出错: {err}")
 
-        # 关闭Selenium连接
         manager.close_browser()
 
 
-# 运行主函数
 if __name__ == "__main__":
     main()
