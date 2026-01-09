@@ -88,31 +88,60 @@ def main():
 
     # API配置
     BASE_URL = "http://localhost:9000"
-    data = {"id": 1}
     headers = {
         "Content-Type": "application/json",
-        "api-key": "WGb9tYs132FafT0373dUpCvDjBxfCCD3"
+        "api-key": "WSgRVGQPv9WsDSrhEWy2eDCtLPakbeg4"
     }
 
-    # 通过API启动浏览器环境
+    # 步骤1: 创建浏览器环境
+    print("步骤1: 创建浏览器环境...")
+    create_browser_data = {
+        "name": "环境2",
+      
+    }
+
     try:
-        response = requests.post(
+        create_response = requests.post(
+            f"{BASE_URL}/api/addBrowser",
+            headers=headers,
+            data=json.dumps(create_browser_data)
+        )
+        create_response_data = create_response.json()
+        print("创建浏览器响应:", create_response_data)
+
+        if not create_response_data.get("success"):
+            print("创建浏览器失败")
+            return
+
+        browser_id = create_response_data.get("data", {}).get("id")
+        print(f"✓ 浏览器环境创建成功，ID: {browser_id}")
+
+    except Exception as err:
+        print(f"创建浏览器失败: {err}")
+        return
+
+    # 步骤2: 启动浏览器
+    print("\n步骤2: 启动浏览器...")
+    launch_data = {"id": browser_id}
+
+    try:
+        launch_response = requests.post(
             f"{BASE_URL}/api/launchBrowser",
             headers=headers,
-            data=json.dumps(data)
+            data=json.dumps(launch_data)
         )
-        response_data = response.json()
-        print("启动浏览器响应:", response_data)
+        launch_response_data = launch_response.json()
+        print("启动浏览器响应:", launch_response_data)
     except Exception as err:
         print(f"启动浏览器失败: {err}")
         return
 
-    if not response_data.get("success"):
+    if not launch_response_data.get("success"):
         print("启动浏览器失败")
         return
 
-    debugging_port = response_data.get("data", {}).get("debuggingPort")
-    webdriver_path = response_data.get("data", {}).get("webdriver_path")
+    debugging_port = launch_response_data.get("data", {}).get("debuggingPort")
+    webdriver_path = launch_response_data.get("data", {}).get("webdriver_path")
 
     print(f"准备连接浏览器 - 端口: {debugging_port}, 驱动路径: {webdriver_path}")
 
@@ -220,11 +249,12 @@ def main():
         traceback.print_exc()
     finally:
         # 通过API关闭浏览器
+        stop_data = {"id": browser_id}
         try:
             stop_response = requests.post(
                 f"{BASE_URL}/api/stopBrowser",
                 headers=headers,
-                data=json.dumps(data)
+                data=json.dumps(stop_data)
             )
             stop_response_data = stop_response.json()
             print("关闭浏览器响应:", stop_response_data)
