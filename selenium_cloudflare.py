@@ -438,6 +438,59 @@ def main():
             except Exception as e:
                 print(f"点击 Next 按钮失败: {e}")
 
+            # ========== 第三页表单填写 ==========
+
+
+            time.sleep(20)
+
+            # 点击支付选项按钮
+            try:
+                payment_option = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="payment"]/div/div/fieldset/div/div/div[2]/div/div[3]/button/span[1]'))
+                )
+                payment_option.click()
+                print("✓ 点击支付选项按钮")
+                time.sleep(1)
+            except Exception as e:
+                print(f"点击支付选项按钮失败: {e}")
+
+            # 点击确认按钮
+            try:
+                confirm_button = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '/html/body/div[2]/div[2]/div/div[3]/button[1]/span[1]'))
+                )
+                confirm_button.click()
+                print("✓ 点击确认按钮")
+                time.sleep(1)
+            except Exception as e:
+                print(f"点击确认按钮失败: {e}")
+
+            # 输入手机号
+            try:
+                phone_input = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '/html/body/div[2]/div[2]/div/div/div[3]/div/div[2]/div/div/div/input'))
+                )
+                phone_input.clear()
+                phone_input.send_keys("7133848476")
+                print("✓ 输入手机号: 7133848476")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"输入手机号失败: {e}")
+
+            # 点击提交按钮
+            try:
+                submit_button = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '/html/body/div[2]/div[2]/div/div/div[4]/button/span[1]'))
+                )
+                submit_button.click()
+                print("✓ 点击提交按钮")
+                time.sleep(2)
+            except Exception as e:
+                print(f"点击提交按钮失败: {e}")
+
+
+                
+
             time.sleep(100)
 
 
