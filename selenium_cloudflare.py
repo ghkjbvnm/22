@@ -351,8 +351,95 @@ def main():
 
             print(f"第 {index + 1} 行数据填写完成")
 
+            # 点击 Next 按钮
+            try:
+                next_button = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="btnNext"]'))
+                )
+                next_button.click()
+                print("✓ 点击 Next 按钮")
+                time.sleep(2)
+            except Exception as e:
+                print(f"点击 Next 按钮失败: {e}")
+
+            print(f"第 {index + 1} 行数据填写完成")
+
+            # ========== 第二页表单填写 ==========
+
+            # 点击 HasPurchasedBeef
+            try:
+                has_purchased_beef = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="HasPurchasedBeef"]'))
+                )
+                has_purchased_beef.click()
+                print("✓ 点击 HasPurchasedBeef")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"点击 HasPurchasedBeef 失败: {e}")
+
+            # 点击 HasPurchaseEligibleState
+            try:
+                has_purchase_eligible_state = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="HasPurchaseEligibleState"]'))
+                )
+                has_purchase_eligible_state.click()
+                print("✓ 点击 HasPurchaseEligibleState")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"点击 HasPurchaseEligibleState 失败: {e}")
+
+            # 点击 WasBeefPurchasedEveryMonth
+            try:
+                was_beef_purchased_every_month = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="WasBeefPurchasedEveryMonth"]'))
+                )
+                was_beef_purchased_every_month.click()
+                print("✓ 点击 WasBeefPurchasedEveryMonth")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"点击 WasBeefPurchasedEveryMonth 失败: {e}")
+
+            # 输入 EstimatedBeefPurchasedEveryMonth (随机整数 20-40)
+            try:
+                import random
+                estimated_beef = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="EstimatedBeefPurchasedEveryMonth"]'))
+                )
+                estimated_beef.clear()
+                beef_value = random.randint(20, 40)
+                estimated_beef.send_keys(str(beef_value))
+                print(f"✓ 输入 EstimatedBeefPurchasedEveryMonth: {beef_value}")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"输入 EstimatedBeefPurchasedEveryMonth 失败: {e}")
+
+            # 输入 EstimateMonthlySpent (随机整数 100-300)
+            try:
+                import random
+                monthly_spent = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="EstimateMonthlySpent"]'))
+                )
+                monthly_spent.clear()
+                spent_value = random.randint(100, 300)
+                monthly_spent.send_keys(str(spent_value))
+                print(f"✓ 输入 EstimateMonthlySpent: {spent_value}")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"输入 EstimateMonthlySpent 失败: {e}")
+
+            # 点击 Next 按钮
+            try:
+                next_button = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="btnNext"]'))
+                )
+                next_button.click()
+                print("✓ 点击 Next 按钮")
+                time.sleep(2)
+            except Exception as e:
+                print(f"点击 Next 按钮失败: {e}")
 
             time.sleep(100)
+
 
 
 
