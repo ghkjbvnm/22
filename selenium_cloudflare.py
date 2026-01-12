@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import requests
+import pandas as pd
 
 
 class SeleniumManager:
@@ -208,33 +209,155 @@ def main():
 
         time.sleep(2)
 
-        # 点击 Address_State 下拉框并选择 Alabama
-        try:
-            # 点击下拉框
-            state_dropdown = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, '//*[@id="Address_State"]'))
-            )
-            state_dropdown.click()
-            print("✓ 点击 Address_State 下拉框")
-            time.sleep(1)
+        # 读取Excel表格数据
+        print("读取Excel表格...")
+        df = pd.read_excel('填表信息.xlsx', sheet_name='Sheet1')
 
-            # 点击 Alabama 选项
-            alabama_option = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, '//*[@id="Address_State"]/option[text()="Alabama"]'))
-            )
-            alabama_option.click()
-            print("✓ 选择 Alabama")
-            time.sleep(0.5)
-        except Exception as e:
-            print(f"选择 Alabama 失败: {e}")
-            # 备选方案：使用 Select 类
+        # 遍历每一行数据进行填写
+        for index, row in df.iterrows():
+            print(f"\n正在填写第 {index + 1} 行数据...")
+
+            # 点击 ClaimantType
             try:
-                from selenium.webdriver.support.select import Select
-                state_select = Select(driver.find_element(By.ID, "Address_State"))
-                state_select.select_by_value("AL")
-                print("✓ 通过 Select 类选择 Alabama")
-            except Exception as e2:
-                print(f"使用 Select 类选择也失败: {e2}")
+                claimant_type = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="ClaimantType"]'))
+                )
+                claimant_type.click()
+                print("✓ 点击 ClaimantType")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"点击 ClaimantType 失败: {e}")
+
+
+            time.sleep(2)
+
+            # 输入名
+            try:
+                first_name = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="FirstName"]'))
+                )
+                first_name.clear()
+                first_name.send_keys(str(row['名']))
+                print(f"✓ 输入名: {row['名']}")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"输入名失败: {e}")
+
+            # 输入姓
+            try:
+                last_name = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="LastName"]'))
+                )
+                last_name.clear()
+                last_name.send_keys(str(row['姓']))
+                print(f"✓ 输入姓: {row['姓']}")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"输入姓失败: {e}")
+
+            # 输入地址第一行
+            try:
+                address1 = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="Address_Address1"]'))
+                )
+                address1.clear()
+                address1.send_keys(str(row['地址第一行']))
+                print(f"✓ 输入地址第一行: {row['地址第一行']}")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"输入地址第一行失败: {e}")
+
+            # 输入城市
+            try:
+                city = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="Address_City"]'))
+                )
+                city.clear()
+                city.send_keys(str(row['城市']))
+                print(f"✓ 输入城市: {row['城市']}")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"输入城市失败: {e}")
+
+            # 点击州下拉框
+            try:
+                state_dropdown = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="Address_State"]'))
+                )
+                state_dropdown.click()
+                print("✓ 点击 Address_State 下拉框")
+                time.sleep(1)
+            except Exception as e:
+                print(f"点击州下拉框失败: {e}")
+
+            # 选择州（使用州全名）
+            try:
+                state_name = str(row['州全名'])
+                state_option = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, f'//*[@id="Address_State"]/option[text()="{state_name}"]'))
+                )
+                state_option.click()
+                print(f"✓ 选择州: {state_name}")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"选择州失败: {e}")
+
+            # 输入邮编
+            try:
+                zip_code = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="Address_ZipCode"]'))
+                )
+                zip_code.clear()
+                zip_code.send_keys(str(row['zip_code']))
+                print(f"✓ 输入邮编: {row['zip_code']}")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"输入邮编失败: {e}")
+
+            # 输入电话
+            try:
+                phone = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="PhoneNumber"]'))
+                )
+                phone.clear()
+                phone.send_keys(str(row['电话']))
+                print(f"✓ 输入电话: {row['电话']}")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"输入电话失败: {e}")
+
+            # 输入邮箱
+            try:
+                email = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="EmailAddress"]'))
+                )
+                email.clear()
+                email.send_keys(str(row['邮箱']))
+                print(f"✓ 输入邮箱: {row['邮箱']}")
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"输入邮箱失败: {e}")
+
+            # 点击 Next 按钮
+            try:
+                next_button = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="btnNext"]'))
+                )
+                next_button.click()
+                print("✓ 点击 Next 按钮")
+                time.sleep(2)
+            except Exception as e:
+                print(f"点击 Next 按钮失败: {e}")
+
+            print(f"第 {index + 1} 行数据填写完成")
+
+
+            time.sleep(100)
+
+
+
+
+
 
     except Exception as err:
         print(f"Selenium操作出错: {err}")
