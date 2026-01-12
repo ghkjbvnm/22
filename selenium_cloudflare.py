@@ -208,7 +208,33 @@ def main():
 
         time.sleep(2)
 
-        
+        # 点击 Address_State 下拉框并选择 Alabama
+        try:
+            # 点击下拉框
+            state_dropdown = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, '//*[@id="Address_State"]'))
+            )
+            state_dropdown.click()
+            print("✓ 点击 Address_State 下拉框")
+            time.sleep(1)
+
+            # 点击 Alabama 选项
+            alabama_option = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, '//*[@id="Address_State"]/option[text()="Alabama"]'))
+            )
+            alabama_option.click()
+            print("✓ 选择 Alabama")
+            time.sleep(0.5)
+        except Exception as e:
+            print(f"选择 Alabama 失败: {e}")
+            # 备选方案：使用 Select 类
+            try:
+                from selenium.webdriver.support.select import Select
+                state_select = Select(driver.find_element(By.ID, "Address_State"))
+                state_select.select_by_value("AL")
+                print("✓ 通过 Select 类选择 Alabama")
+            except Exception as e2:
+                print(f"使用 Select 类选择也失败: {e2}")
 
     except Exception as err:
         print(f"Selenium操作出错: {err}")
