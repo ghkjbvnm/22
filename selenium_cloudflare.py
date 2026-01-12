@@ -208,40 +208,7 @@ def main():
 
         time.sleep(2)
 
-        # 点击 ClaimantType 下拉框
-        try:
-            claimant_type_dropdown = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, '//*[@id="ClaimantType"]'))
-            )
-            claimant_type_dropdown.click()
-            print("✓ 点击 ClaimantType 下拉框")
-            time.sleep(1)
-        except Exception as e:
-            print(f"点击 ClaimantType 失败: {e}")
-
-        # 在 FirstName 输入框输入 "A"
-        try:
-            first_name_input = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, '//*[@id="FirstName"]'))
-            )
-            first_name_input.clear()
-            first_name_input.send_keys("A")
-            print("✓ 在 FirstName 输入框输入: A")
-            time.sleep(0.5)
-        except Exception as e:
-            print(f"输入 FirstName 失败: {e}")
-
-        # 在 LastName 输入框输入 "B"
-        try:
-            last_name_input = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, '//*[@id="LastName"]'))
-            )
-            last_name_input.clear()
-            last_name_input.send_keys("B")
-            print("✓ 在 LastName 输入框输入: B")
-            time.sleep(0.5)
-        except Exception as e:
-            print(f"输入 LastName 失败: {e}")
+        
 
     except Exception as err:
         print(f"Selenium操作出错: {err}")
