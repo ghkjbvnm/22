@@ -464,7 +464,28 @@ def main():
             except Exception as e:
                 print(f"点击支付选项按钮失败: {e}")
 
+
+            # 切换回主页面
+            try:
+                driver.switch_to.default_content()
+                print("✓ 切换回主页面")
+            except Exception as e:
+                print(f"切换回主页面失败: {e}")
+
+            time.sleep(1)
+            # 切换到支付iframe
+            try:
+                payment_iframe = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="dst-payment"]/iframe[3]'))
+                )
+                driver.switch_to.frame(payment_iframe)
+                print("✓ 切换到支付iframe")
+                time.sleep(1)
+            except Exception as e:
+                print(f"切换到支付iframe失败: {e}")
+
             # 点击确认按钮
+            time.sleep(1)
             try:
                 confirm_button = WebDriverWait(driver, 10).until(
                     EC.element_to_be_clickable((By.XPATH, '/html/body/div[2]/div[2]/div/div[3]/button[1]/span[1]'))
