@@ -1,5 +1,5 @@
-python -m myenv myenv
-.\myenv\Scripts\activate
+python -m venv venv
+.\venv\Scripts\activate
 
 .\venv\Scripts\activate
 pyinstaller --onefile selenium_cloudflare.py

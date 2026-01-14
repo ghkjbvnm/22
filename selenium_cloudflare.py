@@ -88,7 +88,7 @@ def main():
     manager = SeleniumManager()
 
     # API配置
-    BASE_URL = "http://localhost:9000"
+    BASE_URL = "http://localhost:9001"
     headers = {
         "Content-Type": "application/json",
         "api-key": "WSgRVGQPv9WsDSrhEWy2eDCtLPakbeg4"
@@ -440,8 +440,18 @@ def main():
 
             # ========== 第三页表单填写 ==========
 
-
             time.sleep(20)
+
+            # 切换到支付iframe
+            try:
+                payment_iframe = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="dst-payment"]/iframe[1]'))
+                )
+                driver.switch_to.frame(payment_iframe)
+                print("✓ 切换到支付iframe")
+                time.sleep(1)
+            except Exception as e:
+                print(f"切换到支付iframe失败: {e}")
 
             # 点击支付选项按钮
             try:
@@ -487,6 +497,13 @@ def main():
                 time.sleep(2)
             except Exception as e:
                 print(f"点击提交按钮失败: {e}")
+
+            # 切换回主页面
+            try:
+                driver.switch_to.default_content()
+                print("✓ 切换回主页面")
+            except Exception as e:
+                print(f"切换回主页面失败: {e}")
 
 
                 
