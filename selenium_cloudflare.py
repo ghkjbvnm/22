@@ -496,28 +496,80 @@ def main():
             except Exception as e:
                 print(f"点击确认按钮失败: {e}")
 
-            # 输入手机号
-            try:
-                phone_input = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.XPATH, '/html/body/div[2]/div[2]/div/div/div[3]/div/div[2]/div/div/div/input'))
-                )
-                phone_input.clear()
-                phone_input.send_keys("7133848476")
-                print("✓ 输入手机号: 7133848476")
-                time.sleep(0.5)
-            except Exception as e:
-                print(f"输入手机号失败: {e}")
+            # 读取接码电话Excel表格
+            print("读取接码电话Excel表格...")
+            phone_df = pd.read_excel('接码电话.xlsx', sheet_name='Sheet1')
+            phone_data = phone_df[['接码电话', '接码api']].to_dict('records')
+            print(f"✓ 共读取到 {len(phone_data)} 个电话号码")
 
-            # 点击提交按钮
-            try:
-                submit_button = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, '/html/body/div[2]/div[2]/div/div/div[4]/button/span[1]'))
-                )
-                submit_button.click()
-                print("✓ 点击提交按钮")
-                time.sleep(2)
-            except Exception as e:
-                print(f"点击提交按钮失败: {e}")
+            # 依次尝试每个电话号码
+            code_received = False
+            verification_code = None
+
+            for idx, phone_info in enumerate(phone_data):
+                phone_number = phone_info['接码电话']
+                sms_api = phone_info['接码api']
+                print(f"\n尝试第 {idx + 1} 个电话号码: {phone_number}")
+                print(f"接码API: {sms_api}")
+
+                # 输入手机号
+                try:
+                    phone_input = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.XPATH, '/html/body/div[2]/div[2]/div/div/div[3]/div/div[2]/div/div/div/input'))
+                    )
+                    phone_input.clear()
+                    phone_input.send_keys(str(phone_number))
+                    print(f"✓ 输入手机号: {phone_number}")
+                    time.sleep(0.5)
+                except Exception as e:
+                    print(f"输入手机号失败: {e}")
+                    continue
+
+                # 点击提交按钮
+                try:
+                    submit_button = WebDriverWait(driver, 10).until(
+                        EC.element_to_be_clickable((By.XPATH, '/html/body/div[2]/div[2]/div/div/div[4]/button/span[1]'))
+                    )
+                    submit_button.click()
+                    print("✓ 点击提交按钮")
+                    time.sleep(2)
+                except Exception as e:
+                    print(f"点击提交按钮失败: {e}")
+                    continue
+
+                # 调用接码API获取验证码
+                try:
+                    api_response = requests.get(sms_api)
+                    api_data = api_response.text
+
+                    print(f"API返回: {api_data}")
+
+                    # 解析API返回结果
+                    if api_data.startswith("YES|"):
+                        # 格式: YES|2026-01-27|Your payment verification code is: 609709
+                        parts = api_data.split("|")
+                        if len(parts) >= 3:
+                            message = parts[2]
+                            # 提取验证码（6位数字）
+                            import re
+                            code_match = re.search(r'\b\d{6}\b', message)
+                            if code_match:
+                                verification_code = code_match.group()
+                                print(f"✓ 获取到验证码: {verification_code}")
+                                code_received = True
+                                break
+                    elif api_data.startswith("NO|"):
+                        # 格式: NO|暂时没有消息|2026-01-27
+                        print(f"暂时没有消息，尝试下一个号码...")
+                        time.sleep(2)
+                        continue
+                    else:
+                        print(f"API返回格式异常: {api_data}")
+                        continue
+
+                except Exception as e:
+                    print(f"调用接码API失败: {e}")
+                    continue
 
             # 切换回主页面
             try:
@@ -525,6 +577,12 @@ def main():
                 print("✓ 切换回主页面")
             except Exception as e:
                 print(f"切换回主页面失败: {e}")
+
+            # 如果获取到验证码，继续操作
+            if code_received and verification_code:
+                print(f"\n成功获取验证码: {verification_code}")
+            else:
+                print("\n所有电话号码都无法获取到验证码")
 
 
                 
